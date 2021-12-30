@@ -1,0 +1,12 @@
+<%= if @list != nil do %>
+<h1><%= @list_id %></h1>
+
+<ol class="list">
+  <%= for item <- @list["items"] do %>
+    <ListerWeb.Components.list_item item={item} />
+  <% end %>
+</ol>
+
+<% else %>
+<h1> No such list <%= @list_id%> </h1>
+<% end %>
