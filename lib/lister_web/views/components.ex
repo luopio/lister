@@ -8,17 +8,15 @@ defmodule ListerWeb.Components do
         type="text"
         value={ @item["content"] }
         phx-keyup="save-item"
-        phx-value-item={@item["id"]}
+        phx-value-item={ @item["id" ]}
         phx-debounce="500"
-        x-ref="input"}
-        x-on:blur="edited = false"
       />
       <button
-        @click="edited = false">
+        phx-click="add-item"
+        phx-value-after-item={ @item["id"] }>
         +
       </button>
     </li>
     """
   end
-
 end

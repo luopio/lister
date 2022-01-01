@@ -1,3 +1,5 @@
+/* @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;500&display=swap'); */
+
 /* This file is for your main application CSS */
 @import "./phoenix.css";
 
@@ -120,9 +122,9 @@
 }
 
 
-/* Lister */
-@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;500&display=swap');
-
+/*
+  Lister
+*/
 body,
 input {
   font-family: 'Quicksand', sans-serif;
