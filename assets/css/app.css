@@ -135,17 +135,28 @@ input {
   list-style: none;
 }
 
-.list-item .edited-container {
-  background: #f2f2f2;
+.list-item {
+  display: flex;
 }
 
 .list-item input {
-  border: 0;
+  border: 1px solid transparent;
   font-weight: 100;
-  display: inline-block;
-
+  margin: 0;
+  flex: 1;
+  height: auto;
 }
 
-.list-item button {
-  display: inline-block;
+.list-item input:focus {
+  border-color: black;
+}
+
+.list-item:nth-child(2n) {
+  background: #f2f2f2;
+}
+
+.list-item .buttons {
+  flex-basis: 80px;
+  text-align: center;
+  margin-top: 5px;
 }

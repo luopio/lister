@@ -7,9 +7,6 @@ defmodule ListerWeb.ListerLiveView do
   def mount(%{"code" => list_id}, _params, socket) do
     IO.puts("mount() for #{list_id}")
     Phoenix.PubSub.subscribe(Lister.PubSub, @topic)
-    # if connected?(socket) do
-    #   Process.send_after(self(), :update_foo, 2000)
-    # end
     list = Lister.Lists.get_or_create_list(list_id)
     IO.puts("got a list")
     IO.inspect(list)
@@ -24,22 +21,30 @@ defmodule ListerWeb.ListerLiveView do
     list_id = socket.assigns[:list_id]
     {item_id, _}= Integer.parse(item_id)
     Lister.Lists.update_item(list_id, item_id, %{"content" => value})
-    new_list = Lister.Lists.get_list(list_id)
-    IO.inspect(new_list)
-    Phoenix.PubSub.broadcast(Lister.PubSub, @topic, "update")
-    {:noreply, assign(socket, :list, new_list)}
+    Phoenix.PubSub.broadcast(Lister.PubSub, @topic, %{update: {list_id, item_id, value}})
+    {:noreply, socket}
   end
 
   def handle_event("add-item", %{"after-item" => after_item_id}, socket) do
+    IO.puts("got add event after #{after_item_id}")
     list_id = socket.assigns[:list_id]
     {after_item_id, _}= Integer.parse(after_item_id)
-    new_list = Lister.Lists.add_item_after(list_id, after_item_id)
-    {:noreply, assign(socket, :list, new_list)}
+    new_item_id = Lister.Lists.add_item_after(list_id, after_item_id)
+    Phoenix.PubSub.broadcast(Lister.PubSub, @topic, %{add: {list_id, after_item_id, new_item_id}})
+    {:noreply, socket}
   end
 
-  def handle_info("update", socket) do
-    list_id = socket.assigns.list_id
-    list = Lister.Lists.get_list(list_id)
+  def handle_info(%{update: {_list_id, item_id, value}}, socket) do
+    IO.puts("update call with #{item_id} = #{value}")
+    new_items = Lister.Lists.local_update_item_content(socket.assigns.list["items"], item_id, value)
+    list = Map.put(socket.assigns[:list], "items", new_items)
+    {:noreply, assign(socket, :list, list)}
+  end
+
+  def handle_info(%{add: {_list_id, after_item_id, new_item_id}}, socket) do
+    IO.puts("add call with #{after_item_id}")
+    new_items = Lister.Lists.local_add_item_after(socket.assigns.list["items"], new_item_id, after_item_id)
+    list = Map.put(socket.assigns[:list], "items", new_items)
     {:noreply, assign(socket, :list, list)}
   end
 

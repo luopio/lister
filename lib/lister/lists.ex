@@ -68,7 +68,7 @@ defmodule Lister.Lists do
         end
       end)
 
-    list
+    list |> IO.inspect(label: "got list #{list_id}")
   end
 
   def listitems_to_map(items) do
@@ -79,6 +79,27 @@ defmodule Lister.Lists do
         "content" => elem(item, 4)
       }
     end)
+  end
+
+  # These local things should live somewhere else..
+  def local_update_item_content(list_items, item_id, content) do
+    Enum.map(list_items, fn item ->
+      if item_id == item["id"] do
+        Map.put(item, "content", content)
+      else
+        item
+      end
+    end)
+  end
+
+  def local_add_item_after(list_items, new_item_id, after_item_id, content \\ "") do
+    after_index = Enum.find_index(list_items, fn item -> item["id"] == after_item_id end)
+
+    List.insert_at(list_items, after_index + 1, %{
+      "id" => new_item_id,
+      "next" => after_item_id,
+      "content" => content
+    })
   end
 
   def add_last_item(list_id) do
@@ -97,31 +118,31 @@ defmodule Lister.Lists do
   end
 
   def add_item_after(list_id, after_item_id) when is_integer(after_item_id) do
-    :mnesia.transaction(fn ->
-      IO.puts("insert after #{after_item_id} for #{list_id}")
-      ret = :mnesia.read({ListItem, after_item_id})
-      IO.inspect(ret)
-      IO.puts("fofof")
-      new_id = _new_entry_id()
-      IO.puts("new entry id #{new_id}")
-      [{ListItem, _id, _list_id, next_item_id, content} | _] = ret
-      :mnesia.write({ListItem, new_id, list_id, next_item_id, ""})
-      :mnesia.write({ListItem, after_item_id, list_id, new_id, content})
-    end)
+    new_id = _new_entry_id()
 
-    get_list(list_id) |> IO.inspect(label: "New list")
+    {:atomic, :ok} =
+      :mnesia.transaction(fn ->
+        IO.puts("insert after #{after_item_id} for #{list_id}")
+        ret = :mnesia.read({ListItem, after_item_id})
+        IO.inspect(ret)
+        IO.puts("fofof")
+        IO.puts("new entry id #{new_id}")
+        [{ListItem, _id, _list_id, next_item_id, content} | _] = ret
+        :mnesia.write({ListItem, new_id, list_id, next_item_id, ""})
+        :mnesia.write({ListItem, after_item_id, list_id, new_id, content})
+      end)
+
+    new_id
   end
 
   def update_item(list_id, entry_id, params)
       when is_integer(entry_id) and is_map(params) do
-    ret =
+    {:atomic, :ok} =
       :mnesia.transaction(fn ->
         [{ListItem, _, _, prev_id, _}] = :mnesia.read({ListItem, entry_id})
         :mnesia.write({ListItem, entry_id, list_id, prev_id, params["content"]})
         IO.puts("Updated #{entry_id}")
       end)
-
-    IO.inspect(ret, label: "mnesia transaction")
   end
 
   defp _create_list(list_id, name) do

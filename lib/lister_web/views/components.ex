@@ -11,11 +11,13 @@ defmodule ListerWeb.Components do
         phx-value-item={ @item["id" ]}
         phx-debounce="500"
       />
-      <button
-        phx-click="add-item"
-        phx-value-after-item={ @item["id"] }>
-        +
-      </button>
+      <div class="buttons">
+        <button
+          phx-click="add-item"
+          phx-value-after-item={ @item["id"] }>
+          +
+        </button>
+      </div>
     </li>
     """
   end
