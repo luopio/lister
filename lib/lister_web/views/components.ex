@@ -4,10 +4,15 @@ defmodule ListerWeb.Components do
   def list_item(assigns) do
     ~H"""
     <li class="list-item">
+      <input type="checkbox"
+        checked={ @item["completed"] }
+        phx-value-item={ @item["id" ]}
+        phx-click="update-item-completed"
+        />
       <input
         type="text"
         value={ @item["content"] }
-        phx-keyup="save-item"
+        phx-keyup="update-item-content"
         phx-value-item={ @item["id" ]}
         phx-debounce="500"
       />
